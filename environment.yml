@@ -1,0 +1,35 @@
+---
+name: spise
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - go>=1.20,<1.21
+---
+name: spise
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  -
+---
+name: spise
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  -
+---
+name: spise
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  -
+---
+name: spise
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  -
