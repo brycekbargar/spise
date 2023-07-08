@@ -1,7 +1,10 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/samber/lo"
 )
 
 // InvaderCardpool is used for terrain predictions over the course of a game.
@@ -63,16 +66,23 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float32, error) {
 			pcts[t] = float32(rem) / float32(3-rt[t])
 		}
 	} else {
-		return nil, fmt.Errorf("%q is not a stage, expected I, II, or III", stage)
+		return nil, fmt.Errorf("%d is not a stage, expected I, II, or III", stage)
 	}
 
 	return pcts, nil
 }
 
 // Reveal excludes cards from future predictions
-func (ip *InvaderCardpool) Reveal(ic InvaderCard) {
-	// DANGER! check the array index
-	ip.revealed[ic.stage] = append(ip.revealed[ic.stage], ic)
+func (icp *InvaderCardpool) Reveal(ic InvaderCard) error {
+	if 1 > ic.stage || ic.stage > 3 {
+		return fmt.Errorf("%d is not a stage, expected I, II, or III", ic.stage)
+	}
+	if lo.Contains(icp.revealed[ic.stage], ic) {
+		return errors.New("duplicate revealed invader card")
+	}
+
+	icp.revealed[ic.stage] = append(icp.revealed[ic.stage], ic)
+	return nil
 }
 
 // InvaderCard has a phase and one or more terrain types
