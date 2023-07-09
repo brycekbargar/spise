@@ -1,15 +1,14 @@
 package domain
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/samber/lo"
+	mapset "github.com/deckarep/golang-set/v2"
 )
 
 // InvaderCardpool is used for terrain predictions over the course of a game.
 type InvaderCardpool struct {
-	revealed map[int][]InvaderCard
+	revealed map[int]mapset.Set[InvaderCard]
 }
 
 // NewInvaderCardpool initializes a new pool with no revealed cards.
@@ -17,10 +16,10 @@ type InvaderCardpool struct {
 // where the "Coastal Lands" terrain card starts revealed.
 func NewInvaderCardpool(scotland bool, habsmine bool) *InvaderCardpool {
 	icp := &InvaderCardpool{
-		revealed: map[int][]InvaderCard{
-			1: make([]InvaderCard, 0, 4),
-			2: make([]InvaderCard, 0, 5),
-			3: make([]InvaderCard, 0, 6),
+		revealed: map[int]mapset.Set[InvaderCard]{
+			1: mapset.NewSetWithSize[InvaderCard](4),
+			2: mapset.NewSetWithSize[InvaderCard](5),
+			3: mapset.NewSetWithSize[InvaderCard](6),
 		},
 	}
 	if scotland || habsmine {
@@ -41,7 +40,7 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float32, error) {
 	}
 
 	if stage == 1 || stage == 2 {
-		for _, t := range icp.revealed[stage] {
+		for t := range icp.revealed[stage].Iter() {
 			delete(pcts, t.terrain)
 		}
 		for t := range pcts {
@@ -52,11 +51,11 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float32, error) {
 		for _, t := range StandardTerrains {
 			rt[t] = 0
 		}
-		for _, t := range icp.revealed[3] {
+		for t := range icp.revealed[3].Iter() {
 			rt[t.terrain] = rt[t.terrain] + 1
 			rt[t.terrain2] = rt[t.terrain2] + 1
 		}
-		rem := 6 - len(icp.revealed[3])
+		rem := 6 - icp.revealed[3].Cardinality()
 		for t := range pcts {
 			// Each terrain appears on only 3 Stage III cards
 			if rt[t] == 3 {
@@ -77,11 +76,8 @@ func (icp *InvaderCardpool) Reveal(ic InvaderCard) error {
 	if 1 > ic.stage || ic.stage > 3 {
 		return fmt.Errorf("%d is not a stage, expected I, II, or III", ic.stage)
 	}
-	if lo.Contains(icp.revealed[ic.stage], ic) {
-		return errors.New("duplicate revealed invader card")
-	}
 
-	icp.revealed[ic.stage] = append(icp.revealed[ic.stage], ic)
+	icp.revealed[ic.stage].Add(ic)
 	return nil
 }
 

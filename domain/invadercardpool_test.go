@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	"github.com/brycekbargar/spise/domain"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 func TestInvaderCardPool_Reveal(t *testing.T) {
@@ -17,26 +16,10 @@ func TestInvaderCardPool_Reveal(t *testing.T) {
 		icp := domain.NewInvaderCardpool(false, false)
 
 		err := icp.Reveal(domain.StageOneJungle)
-		require.NoError(t, err)
+		assert.NilError(t, err)
 
 		err = icp.Reveal(domain.StageOneJungle)
-		assert.Error(t, err)
-	})
-	t.Run("Scotland coastal", func(t *testing.T) {
-		t.Parallel()
-
-		icp := domain.NewInvaderCardpool(true, false)
-
-		err := icp.Reveal(domain.StageTwoCoastal)
-		assert.Error(t, err)
-	})
-	t.Run("Habsburg mining coastal", func(t *testing.T) {
-		t.Parallel()
-
-		icp := domain.NewInvaderCardpool(false, true)
-
-		err := icp.Reveal(domain.StageTwoCoastal)
-		assert.Error(t, err)
+		assert.NilError(t, err)
 	})
 	t.Run("Invalid card", func(t *testing.T) {
 		t.Parallel()
@@ -45,7 +28,7 @@ func TestInvaderCardPool_Reveal(t *testing.T) {
 
 		var ic domain.InvaderCard
 		err := icp.Reveal(ic)
-		assert.Error(t, err)
+		assert.ErrorContains(t, err, "not a stage")
 	})
 	t.Run("All the cards", func(t *testing.T) {
 		t.Parallel()
@@ -70,7 +53,7 @@ func TestInvaderCardPool_Reveal(t *testing.T) {
 			domain.StageThreeSandsWetland,
 		} {
 			err := icp.Reveal(ic)
-			assert.NoError(t, err)
+			assert.NilError(t, err)
 		}
 	})
 }
