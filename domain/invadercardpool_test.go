@@ -35,23 +35,7 @@ func TestInvaderCardPool_Reveal(t *testing.T) {
 
 		icp := domain.NewInvaderCardpool(false, false)
 
-		for _, ic := range []domain.InvaderCard{
-			domain.StageOneJungle,
-			domain.StageOneSands,
-			domain.StageOneMountain,
-			domain.StageOneWetland,
-			domain.StageTwoJungle,
-			domain.StageTwoSands,
-			domain.StageTwoMountain,
-			domain.StageTwoWetland,
-			domain.StageTwoCoastal,
-			domain.StageThreeJungleMountain,
-			domain.StageThreeJungleSands,
-			domain.StageThreeJungleWetland,
-			domain.StageThreeMountainSands,
-			domain.StageThreeMountainWetland,
-			domain.StageThreeSandsWetland,
-		} {
+		for _, ic := range domain.AllInvaderCards {
 			err := icp.Reveal(ic)
 			assert.NilError(t, err)
 		}
