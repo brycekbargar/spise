@@ -23,7 +23,10 @@ func NewInvaderCardpool(scotland bool, habsmine bool) *InvaderCardpool {
 		},
 	}
 	if scotland || habsmine {
-		icp.Reveal(StageTwoCoastal)
+		err := icp.Reveal(StageTwoCoastal)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return icp
 }
@@ -39,21 +42,24 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float32, error) {
 		pcts[CoastalLands] = 0.0
 	}
 
-	if stage == 1 || stage == 2 {
+	switch stage {
+	case 1:
+		fallthrough
+	case 2:
 		for t := range icp.revealed[stage].Iter() {
 			delete(pcts, t.terrain)
 		}
 		for t := range pcts {
 			pcts[t] = 100.0 / float32(len(pcts))
 		}
-	} else if stage == 3 {
+	case 3:
 		rt := make(map[Terrain]int)
 		for _, t := range StandardTerrains {
 			rt[t] = 0
 		}
 		for t := range icp.revealed[3].Iter() {
-			rt[t.terrain] = rt[t.terrain] + 1
-			rt[t.terrain2] = rt[t.terrain2] + 1
+			rt[t.terrain]++
+			rt[t.terrain2]++
 		}
 		rem := 6 - icp.revealed[3].Cardinality()
 		for t := range pcts {
@@ -64,17 +70,25 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float32, error) {
 			}
 			pcts[t] = float32(rem) / float32(3-rt[t])
 		}
-	} else {
-		return nil, fmt.Errorf("%d is not a stage, expected I, II, or III", stage)
+	default:
+		return nil, fmt.Errorf(
+			"ErrInvalidInvaderCard %w : %d is not a stage, expected I, II, or III",
+			ErrInvalidInvaderCard,
+			stage,
+		)
 	}
 
 	return pcts, nil
 }
 
-// Reveal excludes cards from future predictions
+// Reveal excludes cards from future predictions.
 func (icp *InvaderCardpool) Reveal(ic InvaderCard) error {
 	if 1 > ic.stage || ic.stage > 3 {
-		return fmt.Errorf("%d is not a stage, expected I, II, or III", ic.stage)
+		return fmt.Errorf(
+			"ErrInvalidInvaderCard %w : %d is not a stage, expected I, II, or III",
+			ErrInvalidInvaderCard,
+			ic.stage,
+		)
 	}
 
 	icp.revealed[ic.stage].Add(ic)

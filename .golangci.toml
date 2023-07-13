@@ -1,0 +1,19 @@
+[output]
+sort-results = true
+
+[issues]
+max-same-issues = 0
+fix = false
+
+[linters]
+disable = ["godox"]
+presets = [
+  "bugs",
+  "comment",
+  "error",
+  "format",
+  "metalinter",
+  "sql",
+  "test",
+  "unused",
+]

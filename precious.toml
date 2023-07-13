@@ -30,18 +30,5 @@ type = "lint"
 include = ["*.go", "go.mod"]
 invoke = "once"
 path_args = "none"
-cmd = [
-  "golangci-lint",
-  "run",
-  "--no-config",
-  "--fast",
-  "-p",
-  "error",
-  "-p",
-  "format",
-  "-p",
-  "test",
-  "-p",
-  "unused",
-]
+cmd = ["golangci-lint", "run", "--fast"]
 ok_exit_codes = [0]
