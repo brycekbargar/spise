@@ -28,6 +28,7 @@ func NewInvaderCardpool(scotland bool, habsmine bool) *InvaderCardpool {
 			panic(err)
 		}
 	}
+
 	return icp
 }
 
@@ -53,22 +54,23 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float64, error) {
 			pcts[t] = 1.0 / float64(len(pcts))
 		}
 	case 3:
-		rt := make(map[Terrain]int)
+		revt := make(map[Terrain]int)
 		for _, t := range StandardTerrains {
-			rt[t] = 0
+			revt[t] = 0
 		}
 		for t := range icp.revealed[3].Iter() {
-			rt[t.terrain]++
-			rt[t.terrain2]++
+			revt[t.terrain]++
+			revt[t.terrain2]++
 		}
 		rem := 6 - icp.revealed[3].Cardinality()
-		for t := range pcts {
+		for trn := range pcts {
 			// Each terrain appears on only 3 Stage III cards
-			if rt[t] == 3 {
-				delete(pcts, t)
+			if revt[trn] == 3 {
+				delete(pcts, trn)
+
 				continue
 			}
-			pcts[t] = float64(3-rt[t]) / float64(rem)
+			pcts[trn] = float64(3-revt[trn]) / float64(rem)
 		}
 	default:
 		return nil, fmt.Errorf(
@@ -82,15 +84,16 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float64, error) {
 }
 
 // Reveal excludes cards from future predictions.
-func (icp *InvaderCardpool) Reveal(ic InvaderCard) error {
-	if 1 > ic.stage || ic.stage > 3 {
+func (icp *InvaderCardpool) Reveal(icard InvaderCard) error {
+	if 1 > icard.stage || icard.stage > 3 {
 		return fmt.Errorf(
 			"ErrInvalidInvaderCard %w : %d is not a stage, expected I, II, or III",
 			ErrInvalidInvaderCard,
-			ic.stage,
+			icard.stage,
 		)
 	}
 
-	icp.revealed[ic.stage].Add(ic)
+	icp.revealed[icard.stage].Add(icard)
+
 	return nil
 }
