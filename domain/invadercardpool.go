@@ -33,8 +33,8 @@ func NewInvaderCardpool(scotland bool, habsmine bool) *InvaderCardpool {
 
 // Predict the probabilities of the next terrain for a given invader Stage.
 // It is solely based on the invader cards that have been revealed.
-func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float32, error) {
-	pcts := make(map[Terrain]float32)
+func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float64, error) {
+	pcts := make(map[Terrain]float64)
 	for _, t := range StandardTerrains {
 		pcts[t] = 0.0
 	}
@@ -50,7 +50,7 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float32, error) {
 			delete(pcts, t.terrain)
 		}
 		for t := range pcts {
-			pcts[t] = 100.0 / float32(len(pcts))
+			pcts[t] = 1.0 / float64(len(pcts))
 		}
 	case 3:
 		rt := make(map[Terrain]int)
@@ -68,7 +68,7 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float32, error) {
 				delete(pcts, t)
 				continue
 			}
-			pcts[t] = float32(rem) / float32(3-rt[t])
+			pcts[t] = float64(3-rt[t]) / float64(rem)
 		}
 	default:
 		return nil, fmt.Errorf(

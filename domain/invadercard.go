@@ -46,12 +46,14 @@ var (
 )
 
 var (
+	// All Stage I Invader Cards.
 	StageOneInvaderCards = []InvaderCard{
 		StageOneJungle,
 		StageOneMountain,
 		StageOneSands,
 		StageOneWetland,
 	}
+	// All Stage II Invader Cards.
 	StageTwoInvaderCards = []InvaderCard{
 		StageTwoJungle,
 		StageTwoMountain,
@@ -59,6 +61,7 @@ var (
 		StageTwoWetland,
 		StageTwoCoastal,
 	}
+	// All Stage III Invader Cards.
 	StageThreeInvaderCards = []InvaderCard{
 		StageThreeJungleMountain,
 		StageThreeJungleSands,
@@ -67,6 +70,7 @@ var (
 		StageThreeMountainWetland,
 		StageThreeSandsWetland,
 	}
+	// All Invader Cards.
 	AllInvaderCards = append(
 		append(StageOneInvaderCards, StageTwoInvaderCards...),
 		StageThreeInvaderCards...)
