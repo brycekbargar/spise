@@ -5,7 +5,7 @@ type Terrain string
 
 const (
 	// The land type is unknown.
-	None Terrain = ""
+	UnknownTerrain Terrain = ""
 	// The jungle land type.
 	Jungle Terrain = "jungle"
 	// The mountain land type.

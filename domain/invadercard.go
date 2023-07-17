@@ -14,23 +14,23 @@ type InvaderCard struct {
 // All possible invader cards.
 var (
 	// Stage I Invader Card w/ Jungle Terrain.
-	StageOneJungle = InvaderCard{1, Jungle, None}
+	StageOneJungle = InvaderCard{1, Jungle, UnknownTerrain}
 	// Stage I Invader Card w/ Mountain Terrain.
-	StageOneMountain = InvaderCard{1, Mountain, None}
+	StageOneMountain = InvaderCard{1, Mountain, UnknownTerrain}
 	// Stage I Invader Card w/ Sands Terrain.
-	StageOneSands = InvaderCard{1, Sands, None}
+	StageOneSands = InvaderCard{1, Sands, UnknownTerrain}
 	// Stage I Invader Card w/ Wetland Terrain.
-	StageOneWetland = InvaderCard{1, Wetland, None}
+	StageOneWetland = InvaderCard{1, Wetland, UnknownTerrain}
 	// Stage II Invader Card w/ Jungle Terrain.
-	StageTwoJungle = InvaderCard{2, Jungle, None}
+	StageTwoJungle = InvaderCard{2, Jungle, UnknownTerrain}
 	// Stage II Invader Card w/ Mountain Terrain.
-	StageTwoMountain = InvaderCard{2, Mountain, None}
+	StageTwoMountain = InvaderCard{2, Mountain, UnknownTerrain}
 	// Stage II Invader Card w/ Sands Terrain.
-	StageTwoSands = InvaderCard{2, Sands, None}
+	StageTwoSands = InvaderCard{2, Sands, UnknownTerrain}
 	// Stage II Invader Card w/ Wetland Terrain.
-	StageTwoWetland = InvaderCard{2, Wetland, None}
+	StageTwoWetland = InvaderCard{2, Wetland, UnknownTerrain}
 	// Unique Stage II Invader Card w/ "Coastal Lands" Terrain.
-	StageTwoCoastal = InvaderCard{2, CoastalLands, None}
+	StageTwoCoastal = InvaderCard{2, CoastalLands, UnknownTerrain}
 	// Stage III Invader Card w/ Jungle + Mountain Terrain.
 	StageThreeJungleMountain = InvaderCard{3, Jungle, Mountain}
 	// Stage III Invader Card w/ Jungle + Sands Terrain.
