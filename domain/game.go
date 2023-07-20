@@ -11,7 +11,8 @@ type Game struct {
 // Initialized Game is a domain.Game with initialized state containers.
 type InitializedGame struct {
 	Game
-	invadercardpool InvaderCardpool
+
+	invadercardpool *InvaderCardpool
 }
 
 // Init initialized the given game.
@@ -19,7 +20,7 @@ func (g *Game) Init() *InitializedGame {
 	init := &InitializedGame{
 		Game: *g,
 
-		invadercardpool: *NewInvaderCardpool(true, true),
+		invadercardpool: NewInvaderCardpool(true, true),
 	}
 
 	return init

@@ -19,5 +19,7 @@ const (
 	// The Tsardom of Russia.
 	Russia Adversary = "russia"
 	// The Kingdom of Scotland.
+	Scotland Adversary = "scotland"
+	// The Kingdom of Sweden.
 	Sweden Adversary = "sweden"
 )
