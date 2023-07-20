@@ -2,13 +2,15 @@ package domain
 
 import "errors"
 
+// ErrInvalidInvaderCard occurs when a stage/terrain is violated.
+// TODO: Maybe make this more granular.
 var ErrInvalidInvaderCard = errors.New("invalid invader card")
 
 // InvaderCard has a phase and one or more terrain types.
 type InvaderCard struct {
-	stage    int
-	terrain  Terrain
-	terrain2 Terrain
+	Stage    int
+	Terrain  Terrain
+	Terrain2 Terrain
 }
 
 // All possible invader cards.

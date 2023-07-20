@@ -8,21 +8,25 @@ import (
 
 // InvaderCardpool is used for terrain predictions over the course of a game.
 type InvaderCardpool struct {
-	revealed map[int]mapset.Set[InvaderCard]
+	game     *Game
+	Revealed map[int]mapset.Set[InvaderCard]
 }
 
 // NewInvaderCardpool initializes a new pool with no revealed cards.
-// Scotland and Habsburg Mining expedition are a special cases
-// where the "Coastal Lands" terrain card starts revealed.
-func NewInvaderCardpool(scotland bool, habsmine bool) *InvaderCardpool {
+func NewInvaderCardpool(game *Game) *InvaderCardpool {
 	icp := &InvaderCardpool{
-		revealed: map[int]mapset.Set[InvaderCard]{
+		game: game,
+		Revealed: map[int]mapset.Set[InvaderCard]{
 			1: mapset.NewSetWithSize[InvaderCard](4),
 			2: mapset.NewSetWithSize[InvaderCard](5),
 			3: mapset.NewSetWithSize[InvaderCard](6),
 		},
 	}
-	if scotland || habsmine {
+	if (game.LeadingAdversary == Scotland && game.LeadingAdversaryLevel >= 2) ||
+		(game.SupportingAdversary == Scotland && game.SupportingAdversaryLevel >= 2) ||
+		(game.LeadingAdversary == HabsburgMines && game.LeadingAdversaryLevel >= 4) ||
+		(game.SupportingAdversary == HabsburgMines && game.SupportingAdversaryLevel >= 4) {
+
 		err := icp.Reveal(StageTwoCoastal)
 		if err != nil {
 			panic(err)
@@ -47,8 +51,8 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float64, error) {
 	case 1:
 		fallthrough
 	case 2:
-		for t := range icp.revealed[stage].Iter() {
-			delete(pcts, t.terrain)
+		for t := range icp.Revealed[stage].Iter() {
+			delete(pcts, t.Terrain)
 		}
 		for t := range pcts {
 			pcts[t] = 1.0 / float64(len(pcts))
@@ -58,11 +62,11 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float64, error) {
 		for _, t := range StandardTerrains {
 			revt[t] = 0
 		}
-		for t := range icp.revealed[3].Iter() {
-			revt[t.terrain]++
-			revt[t.terrain2]++
+		for t := range icp.Revealed[3].Iter() {
+			revt[t.Terrain]++
+			revt[t.Terrain2]++
 		}
-		rem := 6 - icp.revealed[3].Cardinality()
+		rem := 6 - icp.Revealed[3].Cardinality()
 		for trn := range pcts {
 			// Each terrain appears on only 3 Stage III cards
 			if revt[trn] == 3 {
@@ -84,16 +88,14 @@ func (icp InvaderCardpool) Predict(stage int) (map[Terrain]float64, error) {
 }
 
 // Reveal excludes cards from future predictions.
-func (icp *InvaderCardpool) Reveal(icard InvaderCard) error {
-	if 1 > icard.stage || icard.stage > 3 {
-		return fmt.Errorf(
-			"ErrInvalidInvaderCard %w : %d is not a stage, expected I, II, or III",
-			ErrInvalidInvaderCard,
-			icard.stage,
-		)
+func (icp *InvaderCardpool) Reveal(card InvaderCard) error {
+	for _, ic := range AllInvaderCards {
+		if ic == card {
+			icp.Revealed[card.Stage].Add(card)
+
+			return nil
+		}
 	}
 
-	icp.revealed[icard.stage].Add(icard)
-
-	return nil
+	return ErrInvalidInvaderCard
 }

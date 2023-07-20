@@ -18,3 +18,6 @@ presets = [
   "test",
   "unused",
 ]
+
+[linters-settings.varnamelen]
+ignore-names = ["tc"]
