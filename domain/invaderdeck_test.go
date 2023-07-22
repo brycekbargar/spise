@@ -1,7 +1,7 @@
 package domain_test
 
 import (
-	"strings"
+	"bytes"
 	"testing"
 
 	"github.com/brycekbargar/spise/domain"
@@ -25,7 +25,7 @@ func TestInvaderDeck_NewInvaderDeck(t *testing.T) {
 		{"BP3", &domain.Game{
 			LeadingAdversary:      domain.BrandenburgPrussia,
 			LeadingAdversaryLevel: 3,
-		}, "111-3-222-3333"},
+		}, "11-3-2222-3333"},
 		{"BP4", &domain.Game{
 			LeadingAdversary:      domain.BrandenburgPrussia,
 			LeadingAdversaryLevel: 4,
@@ -153,7 +153,7 @@ func TestInvaderDeck_NewInvaderDeck(t *testing.T) {
 			LeadingAdversaryLevel:    4,
 			SupportingAdversary:      domain.Scotland,
 			SupportingAdversaryLevel: 4,
-		}, "11-2-3-2-3-3-C-3-2-3"},
+		}, "11-2-3-2-33-C-3-2-3"},
 		{"S4BP5", &domain.Game{
 			LeadingAdversary:         domain.Scotland,
 			LeadingAdversaryLevel:    4,
@@ -171,13 +171,13 @@ func TestInvaderDeck_NewInvaderDeck(t *testing.T) {
 			LeadingAdversaryLevel:    4,
 			SupportingAdversary:      domain.HabsburgMines,
 			SupportingAdversaryLevel: 4,
-		}, "112S-3-C2-3333"},
+		}, "11-2S-3-C2-3333"},
 		{"S4R4", &domain.Game{
 			LeadingAdversary:         domain.Scotland,
 			LeadingAdversaryLevel:    4,
 			SupportingAdversary:      domain.Russia,
 			SupportingAdversaryLevel: 4,
-		}, "11-2-3-2-3-3-C-3-2-3"},
+		}, "11-2-3-2-33-C-3-2-3"},
 	}
 
 	for _, tc := range cases {
@@ -186,23 +186,39 @@ func TestInvaderDeck_NewInvaderDeck(t *testing.T) {
 			t.Parallel()
 
 			icp := domain.NewInvaderDeck(tc.game)
-			stages := strings.Split(strings.ReplaceAll(tc.initial, "-", ""), "")
-			for i, s := range stages {
-				card := icp.InDeck[i]
-
-				switch s {
-				case "C":
-					assert.Equal(t, domain.StageTwoCoastal, card.Card)
-				case "S":
-					assert.Equal(t, domain.StageTwoSaltDeposits, card.Card)
-				case "1":
-					assert.Equal(t, domain.StageOneUnknown, card.Card)
-				case "2":
-					assert.Equal(t, domain.StageTwoUnknown, card.Card)
-				case "3":
-					assert.Equal(t, domain.StageThreeUnknown, card.Card)
+			ostg := -1
+			var actual bytes.Buffer
+			for _, actcard := range icp.InDeck {
+				sym := ""
+				stg := -1
+				switch actcard.Card {
+				case domain.StageTwoCoastal:
+					sym = "C"
+					stg = 2
+				case domain.StageTwoSaltDeposits:
+					sym = "S"
+					stg = 2
+				case domain.StageOneUnknown:
+					sym = "1"
+					stg = 1
+				case domain.StageTwoUnknown:
+					sym = "2"
+					stg = 2
+				case domain.StageThreeUnknown:
+					sym = "3"
+					stg = 3
+				default:
+					t.Fatalf("invalidcard: %v", actcard)
 				}
+
+				if ostg != -1 && ostg != stg {
+					actual.WriteString("-")
+				}
+				actual.WriteString(sym)
+				ostg = stg
 			}
+
+			assert.Equal(t, tc.initial, actual.String())
 		})
 	}
 }
