@@ -13,6 +13,7 @@ type InitializedGame struct {
 	*Game
 
 	invadercardpool *InvaderCardpool
+	invaderdeck     *InvaderDeck
 }
 
 // Init initialized the given game.
@@ -21,6 +22,7 @@ func (g *Game) Init() *InitializedGame {
 		Game: g,
 
 		invadercardpool: NewInvaderCardpool(g),
+		invaderdeck:     NewInvaderDeck(g),
 	}
 
 	return init

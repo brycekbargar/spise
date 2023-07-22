@@ -8,14 +8,12 @@ import (
 
 // InvaderCardpool is used for terrain predictions over the course of a game.
 type InvaderCardpool struct {
-	game     *Game
 	Revealed map[int]mapset.Set[InvaderCard]
 }
 
 // NewInvaderCardpool initializes a new pool with no revealed cards.
 func NewInvaderCardpool(game *Game) *InvaderCardpool {
 	icp := &InvaderCardpool{
-		game: game,
 		Revealed: map[int]mapset.Set[InvaderCard]{
 			1: mapset.NewSetWithSize[InvaderCard](4),
 			2: mapset.NewSetWithSize[InvaderCard](5),
