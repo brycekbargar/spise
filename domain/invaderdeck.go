@@ -9,18 +9,18 @@ type InvaderDeck struct {
 
 func NewInvaderDeck(game *Game) *InvaderDeck {
 	initial := []InvaderCardInDeck{
-		{StageOneUnknown},
-		{StageOneUnknown},
-		{StageOneUnknown},
-		{StageTwoUnknown},
-		{StageTwoUnknown},
-		{StageTwoUnknown},
-		{StageTwoUnknown},
-		{StageThreeUnknown},
-		{StageThreeUnknown},
-		{StageThreeUnknown},
-		{StageThreeUnknown},
-		{StageThreeUnknown},
+		{StageOneUnknown, false},
+		{StageOneUnknown, false},
+		{StageOneUnknown, false},
+		{StageTwoUnknown, false},
+		{StageTwoUnknown, false},
+		{StageTwoUnknown, false},
+		{StageTwoUnknown, false},
+		{StageThreeUnknown, false},
+		{StageThreeUnknown, false},
+		{StageThreeUnknown, false},
+		{StageThreeUnknown, false},
+		{StageThreeUnknown, false},
 	}
 
 	mod, ok := modinvaderdec[game.SupportingAdversary]
@@ -43,6 +43,7 @@ func NewInvaderDeck(game *Game) *InvaderDeck {
 // InvaderCardInDeck wraps possibilites for the invader deck.
 type InvaderCardInDeck struct {
 	InvaderCard
+	SpeciallyPlaced bool
 }
 
 // InvaderCardDrawn wraps drawn invader cards.
@@ -68,6 +69,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCardInDeck, lvl int) []Inva
 			if s2ix > 0 && s3ix > 0 && s2ix < s3ix {
 				mod := make([]InvaderCardInDeck, len(deck[:s2ix]))
 				copy(mod, deck[:s2ix])
+				deck[s3ix].SpeciallyPlaced = true
 				mod = append(mod, deck[s3ix])         // nozero
 				mod = append(mod, deck[s2ix:s3ix]...) // nozero
 				mod = append(mod, deck[s3ix+1:]...)   // nozero
@@ -158,7 +160,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCardInDeck, lvl int) []Inva
 						copy(mod, deck[:cix])
 						mod = append( // nozero
 							mod,
-							InvaderCardInDeck{StageTwoSaltDeposits},
+							InvaderCardInDeck{StageTwoSaltDeposits, true},
 						)
 						mod = append( // nozero
 							mod,
@@ -198,6 +200,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCardInDeck, lvl int) []Inva
 					os2ix = s2ix
 					mod := make([]InvaderCardInDeck, len(deck[:s2ix+1]))
 					copy(mod, deck[:s2ix+1])
+					deck[s3ix].SpeciallyPlaced = true
 					mod = append(mod, deck[s3ix])           // nozero
 					mod = append(mod, deck[s2ix+1:s3ix]...) // nozero
 					mod = append(mod, deck[s3ix+1:]...)     // nozero
@@ -224,7 +227,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCardInDeck, lvl int) []Inva
 						copy(mod, deck[:cix])
 						mod = append( // nozero
 							mod,
-							InvaderCardInDeck{StageTwoCoastal},
+							InvaderCardInDeck{StageTwoCoastal, true},
 						)
 						mod = append( // nozero
 							mod,
@@ -262,6 +265,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCardInDeck, lvl int) []Inva
 			if s2ix1 >= 1 {
 				mod := make([]InvaderCardInDeck, len(deck[:s2ix1-1]))
 				copy(mod, deck[:s2ix1-1])
+				deck[s2ix1].SpeciallyPlaced = true
 				mod = append(mod, deck[s2ix1])       // nozero
 				mod = append(mod, deck[s2ix1-1])     // nozero
 				mod = append(mod, deck[s2ix1+1:]...) // nozero
@@ -270,6 +274,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCardInDeck, lvl int) []Inva
 			if s2ix2 >= 2 {
 				mod := make([]InvaderCardInDeck, len(deck[:s2ix2-1]))
 				copy(mod, deck[:s2ix2-1])
+				deck[s2ix2].SpeciallyPlaced = true
 				mod = append(mod, deck[s2ix2])       // nozero
 				mod = append(mod, deck[s2ix2-1])     // nozero
 				mod = append(mod, deck[s2ix2+1:]...) // nozero
@@ -292,6 +297,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCardInDeck, lvl int) []Inva
 			if s1ix >= 0 && s3ix >= 1 {
 				mod := make([]InvaderCardInDeck, len(deck[:s1ix]))
 				copy(mod, deck[:s1ix])
+				deck[s3ix].SpeciallyPlaced = true
 				mod = append(mod, deck[s3ix])           // nozero
 				mod = append(mod, deck[s1ix+1:s3ix]...) // nozero
 				mod = append(mod, deck[s3ix+1:]...)     // nozero
