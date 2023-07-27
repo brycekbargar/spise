@@ -1,5 +1,12 @@
 package domain
 
+import (
+	"errors"
+)
+
+// ErrNoInvaderCard occurs when the an action tries to draw from an empty invader deck.
+var ErrNoInvaderCard = errors.New("the invader deck is empty")
+
 type InvaderDeck struct {
 	game *Game
 
@@ -40,6 +47,39 @@ func NewInvaderDeck(game *Game) *InvaderDeck {
 	}
 }
 
+func (deck *InvaderDeck) InvaderStage() int {
+	if len(deck.InDeck) == 0 {
+		return 3
+	}
+
+	return deck.InDeck[0].Stage
+}
+
+func (deck *InvaderDeck) Draw(card InvaderCard) error {
+	if len(deck.InDeck) == 0 {
+		return ErrNoInvaderCard
+	}
+
+	if card.Stage != deck.InvaderStage() {
+		return ErrInvalidInvaderCard
+	}
+
+	deck.Drawn = append(deck.Drawn, InvaderCardDrawn{card, false})
+	deck.InDeck = deck.InDeck[1:]
+	stg := deck.InvaderStage()
+	rem := len(deck.InDeck) != 0
+	for i := range deck.Drawn {
+		c := deck.Drawn[i]
+		if c.Stage > stg {
+			deck.Drawn[i].PastReturnable = rem && (c.Stage-stg <= 1)
+		} else {
+			deck.Drawn[i].PastReturnable = rem && (stg-c.Stage <= 1)
+		}
+	}
+
+	return nil
+}
+
 // InvaderCardInDeck wraps possibilites for the invader deck.
 type InvaderCardInDeck struct {
 	InvaderCard
@@ -49,6 +89,7 @@ type InvaderCardInDeck struct {
 // InvaderCardDrawn wraps drawn invader cards.
 type InvaderCardDrawn struct {
 	InvaderCard
+	PastReturnable bool
 }
 
 // TODO: what a mess.

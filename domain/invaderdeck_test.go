@@ -9,6 +9,218 @@ import (
 )
 
 //nolint:exhaustruct
+func TestDraw(t *testing.T) {
+	t.Parallel()
+
+	t.Run("EmptyDeck", func(t *testing.T) {
+		t.Parallel()
+
+		deck := &domain.InvaderDeck{}
+		err := deck.Draw(domain.InvaderCard{})
+		assert.ErrorIs(t, domain.ErrNoInvaderCard, err)
+	})
+
+	t.Run("Impossible", func(t *testing.T) {
+		t.Parallel()
+
+		deck := domain.NewInvaderDeck(&domain.Game{})
+		err := deck.Draw(domain.StageThreeUnknown)
+		assert.ErrorIs(t, domain.ErrInvalidInvaderCard, err)
+	})
+
+	t.Run("FullDeck", func(t *testing.T) {
+		t.Parallel()
+
+		deck := domain.NewInvaderDeck(&domain.Game{})
+		for _, dic := range []domain.InvaderCard{
+			{Stage: 1},
+			{Stage: 1},
+			{Stage: 1},
+			{Stage: 2},
+			{Stage: 2},
+			{Stage: 2},
+			{Stage: 2},
+			{Stage: 3},
+			{Stage: 3},
+			{Stage: 3},
+			{Stage: 3},
+			{Stage: 3},
+		} {
+			err := deck.Draw(dic)
+			assert.NilError(t, err, dic)
+		}
+
+		assert.Equal(t, "111-2222-33333", deckToString(t, deck.Drawn))
+	})
+
+	t.Run("Returnable", func(t *testing.T) {
+		t.Parallel()
+
+		cases := []struct {
+			name    string
+			drawn   []domain.InvaderCard
+			inDeck  []domain.InvaderCard
+			discard string
+		}{
+			{
+				"=Same",
+				[]domain.InvaderCard{},
+				[]domain.InvaderCard{
+					domain.StageOneUnknown,
+					domain.StageOneUnknown,
+				},
+				"1*",
+			},
+			{
+				"+Stage",
+				[]domain.InvaderCard{},
+				[]domain.InvaderCard{
+					domain.StageTwoUnknown,
+					domain.StageOneUnknown,
+				},
+				"2*",
+			},
+			{
+				"-Stage",
+				[]domain.InvaderCard{},
+				[]domain.InvaderCard{
+					domain.StageTwoUnknown,
+					domain.StageThreeUnknown,
+				},
+				"2*",
+			},
+			{
+				"--Stage",
+				[]domain.InvaderCard{},
+				[]domain.InvaderCard{
+					domain.StageOneUnknown,
+					domain.StageThreeUnknown,
+				},
+				"1",
+			},
+			{
+				"++Stage",
+				[]domain.InvaderCard{},
+				[]domain.InvaderCard{
+					domain.StageThreeUnknown,
+					domain.StageOneUnknown,
+				},
+				"3",
+			},
+			{
+				"Empty",
+				[]domain.InvaderCard{},
+				[]domain.InvaderCard{
+					domain.StageThreeUnknown,
+				},
+				"3",
+			},
+			{
+				"Disparate",
+				[]domain.InvaderCard{
+					domain.StageTwoUnknown,
+					domain.StageThreeUnknown,
+					domain.StageTwoUnknown,
+					domain.StageOneUnknown,
+				},
+				[]domain.InvaderCard{
+					domain.StageOneUnknown,
+					domain.StageThreeUnknown,
+				},
+				"2*-3*-2*-11",
+			},
+		}
+
+		for _, tc := range cases {
+			tc := tc
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+
+				deck := domain.InvaderDeck{}
+				deck.Drawn = make([]domain.InvaderCardDrawn, 0, len(tc.drawn))
+				for _, c := range tc.drawn {
+					deck.Drawn = append(
+						deck.Drawn,
+						domain.InvaderCardDrawn{InvaderCard: c},
+					)
+				}
+				deck.InDeck = make(
+					[]domain.InvaderCardInDeck,
+					0,
+					len(tc.inDeck),
+				)
+				for _, c := range tc.inDeck {
+					deck.InDeck = append(
+						deck.InDeck,
+						domain.InvaderCardInDeck{InvaderCard: c},
+					)
+				}
+
+				err := deck.Draw(tc.inDeck[0])
+				assert.NilError(t, err)
+				assert.Equal(t, tc.discard, deckToString(t, deck.Drawn))
+			})
+		}
+	})
+}
+
+func deckToString[IC any](t *testing.T, cards []IC) string {
+	t.Helper()
+
+	ostg := -1
+	var actual bytes.Buffer
+	for _, card := range cards {
+		// TODO: Fix this when generics suck less
+		var actcard domain.InvaderCard
+		switch dc := any(card).(type) {
+		case domain.InvaderCardInDeck:
+			actcard = dc.InvaderCard
+		case domain.InvaderCardDrawn:
+			actcard = dc.InvaderCard
+		}
+
+		sym := ""
+		stg := -1
+		switch actcard {
+		case domain.StageTwoCoastal:
+			sym = "C"
+			stg = 2
+		case domain.StageTwoSaltDeposits:
+			sym = "S"
+			stg = 2
+		case domain.StageOneUnknown:
+			sym = "1"
+			stg = 1
+		case domain.StageTwoUnknown:
+			sym = "2"
+			stg = 2
+		case domain.StageThreeUnknown:
+			sym = "3"
+			stg = 3
+		default:
+			t.Fatalf("invalidcard: %v", actcard)
+		}
+
+		idc, ok := any(card).(domain.InvaderCardInDeck)
+		if ok && idc.SpeciallyPlaced == true {
+			sym += "*"
+		}
+		dc, ok := any(card).(domain.InvaderCardDrawn)
+		if ok && dc.PastReturnable == true {
+			sym += "*"
+		}
+
+		if ostg != -1 && ostg != stg {
+			actual.WriteString("-")
+		}
+		actual.WriteString(sym)
+		ostg = stg
+	}
+
+	return actual.String()
+}
+
+//nolint:exhaustruct
 func TestInvaderDeck_NewInvaderDeck(t *testing.T) {
 	t.Parallel()
 
@@ -185,44 +397,8 @@ func TestInvaderDeck_NewInvaderDeck(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			icp := domain.NewInvaderDeck(tc.game)
-			ostg := -1
-			var actual bytes.Buffer
-			for _, actcard := range icp.InDeck {
-				sym := ""
-				stg := -1
-				switch actcard.InvaderCard {
-				case domain.StageTwoCoastal:
-					sym = "C"
-					stg = 2
-				case domain.StageTwoSaltDeposits:
-					sym = "S"
-					stg = 2
-				case domain.StageOneUnknown:
-					sym = "1"
-					stg = 1
-				case domain.StageTwoUnknown:
-					sym = "2"
-					stg = 2
-				case domain.StageThreeUnknown:
-					sym = "3"
-					stg = 3
-				default:
-					t.Fatalf("invalidcard: %v", actcard)
-				}
-
-				if actcard.SpeciallyPlaced == true {
-					sym += "*"
-				}
-
-				if ostg != -1 && ostg != stg {
-					actual.WriteString("-")
-				}
-				actual.WriteString(sym)
-				ostg = stg
-			}
-
-			assert.Equal(t, tc.initial, actual.String())
+			deck := domain.NewInvaderDeck(tc.game)
+			assert.Equal(t, tc.initial, deckToString(t, deck.InDeck))
 		})
 	}
 }
