@@ -191,7 +191,7 @@ func TestInvaderDeck_NewInvaderDeck(t *testing.T) {
 			for _, actcard := range icp.InDeck {
 				sym := ""
 				stg := -1
-				switch actcard.Card {
+				switch actcard.InvaderCard {
 				case domain.StageTwoCoastal:
 					sym = "C"
 					stg = 2

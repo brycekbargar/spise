@@ -8,19 +8,19 @@ type InvaderDeck struct {
 }
 
 func NewInvaderDeck(game *Game) *InvaderDeck {
-	initial := []InvaderCard{
-		StageOneUnknown,
-		StageOneUnknown,
-		StageOneUnknown,
-		StageTwoUnknown,
-		StageTwoUnknown,
-		StageTwoUnknown,
-		StageTwoUnknown,
-		StageThreeUnknown,
-		StageThreeUnknown,
-		StageThreeUnknown,
-		StageThreeUnknown,
-		StageThreeUnknown,
+	initial := []InvaderCardInDeck{
+		{StageOneUnknown},
+		{StageOneUnknown},
+		{StageOneUnknown},
+		{StageTwoUnknown},
+		{StageTwoUnknown},
+		{StageTwoUnknown},
+		{StageTwoUnknown},
+		{StageThreeUnknown},
+		{StageThreeUnknown},
+		{StageThreeUnknown},
+		{StageThreeUnknown},
+		{StageThreeUnknown},
 	}
 
 	mod, ok := modinvaderdec[game.SupportingAdversary]
@@ -32,31 +32,27 @@ func NewInvaderDeck(game *Game) *InvaderDeck {
 		initial = mod(initial, game.LeadingAdversaryLevel)
 	}
 
-	deck := make([]InvaderCardInDeck, 0, len(initial))
-	for _, c := range initial {
-		deck = append(deck, InvaderCardInDeck{c})
-	}
-
 	return &InvaderDeck{
 		game: game,
 
 		Drawn:  []InvaderCardDrawn{},
-		InDeck: deck,
+		InDeck: initial,
 	}
 }
 
 // InvaderCardInDeck wraps possibilites for the invader deck.
 type InvaderCardInDeck struct {
-	Card InvaderCard
+	InvaderCard
 }
 
 // InvaderCardDrawn wraps drawn invader cards.
 type InvaderCardDrawn struct {
-	Card InvaderCard
+	InvaderCard
 }
 
-var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCard{
-	BrandenburgPrussia: func(deck []InvaderCard, lvl int) []InvaderCard {
+// TODO: what a mess.
+var modinvaderdec = map[Adversary]func(deck []InvaderCardInDeck, lvl int) []InvaderCardInDeck{
+	BrandenburgPrussia: func(deck []InvaderCardInDeck, lvl int) []InvaderCardInDeck {
 		if lvl >= 2 {
 			// Put 1 of the Stage III cards between Stage I and Stage II.
 			s2ix, s3ix := -1, -1
@@ -70,7 +66,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 			}
 
 			if s2ix > 0 && s3ix > 0 && s2ix < s3ix {
-				mod := make([]InvaderCard, len(deck[:s2ix]))
+				mod := make([]InvaderCardInDeck, len(deck[:s2ix]))
 				copy(mod, deck[:s2ix])
 				mod = append(mod, deck[s3ix])         // nozero
 				mod = append(mod, deck[s2ix:s3ix]...) // nozero
@@ -136,7 +132,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 
 		return deck
 	},
-	HabsburgLivestock: func(deck []InvaderCard, lvl int) []InvaderCard {
+	HabsburgLivestock: func(deck []InvaderCardInDeck, lvl int) []InvaderCardInDeck {
 		if lvl >= 3 {
 			// Remove 1 additional Stage I Card.
 			for i, c := range deck {
@@ -150,7 +146,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 
 		return deck
 	},
-	HabsburgMines: func(deck []InvaderCard, lvl int) []InvaderCard {
+	HabsburgMines: func(deck []InvaderCardInDeck, lvl int) []InvaderCardInDeck {
 		if lvl >= 4 {
 			// Place the 'Salt Deposits' card in place of the 2nd Stage II card.
 			s2 := 0
@@ -158,10 +154,15 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 				if c.Stage == 2 {
 					s2++
 					if s2 == 2 {
-						mod := make([]InvaderCard, len(deck[:cix]))
+						mod := make([]InvaderCardInDeck, len(deck[:cix]))
 						copy(mod, deck[:cix])
-						mod = append(mod, StageTwoSaltDeposits) // nozero
-						mod = append(mod, deck[cix+1:]...)      // nozero
+						mod = append( // nozero
+							mod,
+							InvaderCardInDeck{StageTwoSaltDeposits},
+						)
+						mod = append( // nozero
+							mod,
+							deck[cix+1:]...)
 						deck = mod
 
 						break
@@ -172,7 +173,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 
 		return deck
 	},
-	Russia: func(deck []InvaderCard, lvl int) []InvaderCard {
+	Russia: func(deck []InvaderCardInDeck, lvl int) []InvaderCardInDeck {
 		if lvl >= 4 {
 			// Put 1 Stage III Card after each Stage II Card.
 			os2ix := -1
@@ -195,7 +196,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 
 				if s2ix != -1 && s3ix != -1 {
 					os2ix = s2ix
-					mod := make([]InvaderCard, len(deck[:s2ix+1]))
+					mod := make([]InvaderCardInDeck, len(deck[:s2ix+1]))
 					copy(mod, deck[:s2ix+1])
 					mod = append(mod, deck[s3ix])           // nozero
 					mod = append(mod, deck[s2ix+1:s3ix]...) // nozero
@@ -211,7 +212,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 
 		return deck
 	},
-	Scotland: func(deck []InvaderCard, lvl int) []InvaderCard {
+	Scotland: func(deck []InvaderCardInDeck, lvl int) []InvaderCardInDeck {
 		if lvl >= 2 {
 			// Place "Coastal Lands" as the 3rd Stage II card.
 			stage2 := 0
@@ -219,10 +220,15 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 				if c.Stage == 2 {
 					stage2++
 					if stage2 == 3 {
-						mod := make([]InvaderCard, len(deck[:cix]))
+						mod := make([]InvaderCardInDeck, len(deck[:cix]))
 						copy(mod, deck[:cix])
-						mod = append(mod, StageTwoCoastal) // nozero
-						mod = append(mod, deck[cix+1:]...) // nozero
+						mod = append( // nozero
+							mod,
+							InvaderCardInDeck{StageTwoCoastal},
+						)
+						mod = append( // nozero
+							mod,
+							deck[cix+1:]...)
 						deck = mod
 
 						break
@@ -235,7 +241,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 			s2ix1, s2ix2 := -1, -1
 			for cix, card := range deck {
 				card := card
-				if card == StageTwoCoastal {
+				if card.InvaderCard == StageTwoCoastal {
 					break
 				}
 
@@ -254,7 +260,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 			}
 
 			if s2ix1 >= 1 {
-				mod := make([]InvaderCard, len(deck[:s2ix1-1]))
+				mod := make([]InvaderCardInDeck, len(deck[:s2ix1-1]))
 				copy(mod, deck[:s2ix1-1])
 				mod = append(mod, deck[s2ix1])       // nozero
 				mod = append(mod, deck[s2ix1-1])     // nozero
@@ -262,7 +268,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 				deck = mod
 			}
 			if s2ix2 >= 2 {
-				mod := make([]InvaderCard, len(deck[:s2ix2-1]))
+				mod := make([]InvaderCardInDeck, len(deck[:s2ix2-1]))
 				copy(mod, deck[:s2ix2-1])
 				mod = append(mod, deck[s2ix2])       // nozero
 				mod = append(mod, deck[s2ix2-1])     // nozero
@@ -284,7 +290,7 @@ var modinvaderdec = map[Adversary]func(deck []InvaderCard, lvl int) []InvaderCar
 			}
 
 			if s1ix >= 0 && s3ix >= 1 {
-				mod := make([]InvaderCard, len(deck[:s1ix]))
+				mod := make([]InvaderCardInDeck, len(deck[:s1ix]))
 				copy(mod, deck[:s1ix])
 				mod = append(mod, deck[s3ix])           // nozero
 				mod = append(mod, deck[s1ix+1:s3ix]...) // nozero
