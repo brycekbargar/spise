@@ -2,6 +2,7 @@ package domain_test
 
 import (
 	"bytes"
+	"strconv"
 	"testing"
 
 	"github.com/brycekbargar/spise/domain"
@@ -164,6 +165,151 @@ func TestDraw(t *testing.T) {
 	})
 }
 
+//nolint:exhaustruct
+func TestReturn(t *testing.T) {
+	t.Parallel()
+
+	t.Run("NotReturnable", func(t *testing.T) {
+		t.Parallel()
+
+		deck := domain.NewInvaderDeck(&domain.Game{})
+		for _, dic := range []domain.InvaderCard{
+			{Stage: 1},
+			{Stage: 1},
+			{Stage: 1},
+			{Stage: 2},
+			{Stage: 2},
+			{Stage: 2},
+			{Stage: 2},
+			{Stage: 3},
+		} {
+			err := deck.Draw(dic)
+			assert.NilError(t, err, dic)
+		}
+
+		err := deck.Return(domain.InvaderCard{Stage: 1})
+		assert.ErrorIs(t, err, domain.ErrInvaderCardNotReturnable)
+	})
+
+	t.Run("Not Drawn", func(t *testing.T) {
+		t.Parallel()
+
+		deck := domain.NewInvaderDeck(&domain.Game{})
+		for _, dic := range []domain.InvaderCard{
+			domain.StageOneWetland,
+		} {
+			err := deck.Draw(dic)
+			assert.NilError(t, err, dic)
+		}
+
+		err := deck.Return(domain.StageOneJungle)
+		assert.ErrorIs(t, err, domain.ErrInvalidInvaderCard)
+	})
+
+	t.Run("Returnable", func(t *testing.T) {
+		t.Parallel()
+
+		cases := []struct {
+			name     string
+			drawn    []domain.InvaderCard
+			inDeck   []domain.InvaderCard
+			returned domain.InvaderCard
+			discard  string
+		}{
+			{
+				"Basic",
+				[]domain.InvaderCard{},
+				[]domain.InvaderCard{
+					domain.StageOneJungle,
+					domain.StageOneUnknown,
+				},
+				domain.StageOneJungle,
+				"1*",
+			},
+			{
+				"Many",
+				[]domain.InvaderCard{
+					domain.StageOneJungle,
+					domain.StageOneWetland,
+					domain.StageOneMountain,
+				},
+				[]domain.InvaderCard{
+					domain.StageOneSands,
+					domain.StageTwoUnknown,
+				},
+				domain.StageOneMountain,
+				"1*1*-2*-1*",
+			},
+			{
+				"TwoAway",
+				[]domain.InvaderCard{
+					domain.StageOneJungle,
+					domain.StageOneWetland,
+					domain.StageTwoMountain,
+					domain.StageThreeMountainWetland,
+				},
+				[]domain.InvaderCard{
+					domain.StageTwoSands,
+					domain.StageThreeUnknown,
+				},
+				domain.StageThreeMountainWetland,
+				"11-2*-3*-2*",
+			},
+			{
+				"TwoAwayBridge",
+				[]domain.InvaderCard{
+					domain.StageOneJungle,
+					domain.StageOneWetland,
+					domain.StageTwoMountain,
+					domain.StageThreeMountainWetland,
+				},
+				[]domain.InvaderCard{
+					domain.StageTwoSands,
+					domain.StageThreeUnknown,
+				},
+				domain.StageTwoMountain,
+				"1*1*-3*3*-2*",
+			},
+		}
+
+		for _, tc := range cases {
+			tc := tc
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+
+				deck := domain.InvaderDeck{}
+				deck.Drawn = make([]domain.InvaderCardDrawn, 0, len(tc.drawn))
+				for _, c := range tc.drawn {
+					deck.Drawn = append(
+						deck.Drawn,
+						domain.InvaderCardDrawn{InvaderCard: c},
+					)
+				}
+				deck.InDeck = make(
+					[]domain.InvaderCardInDeck,
+					0,
+					len(tc.inDeck),
+				)
+				for _, c := range tc.inDeck {
+					deck.InDeck = append(
+						deck.InDeck,
+						domain.InvaderCardInDeck{InvaderCard: c},
+					)
+				}
+
+				err := deck.Draw(tc.inDeck[0])
+				assert.NilError(t, err)
+
+				err = deck.Return(tc.returned)
+				assert.NilError(t, err)
+
+				assert.Equal(t, tc.returned, deck.InDeck[0].InvaderCard)
+				assert.Equal(t, tc.discard, deckToString(t, deck.Drawn))
+			})
+		}
+	})
+}
+
 func deckToString[IC any](t *testing.T, cards []IC) string {
 	t.Helper()
 
@@ -180,7 +326,7 @@ func deckToString[IC any](t *testing.T, cards []IC) string {
 		}
 
 		sym := ""
-		stg := -1
+		var stg int
 		switch actcard {
 		case domain.StageTwoCoastal:
 			sym = "C"
@@ -188,17 +334,13 @@ func deckToString[IC any](t *testing.T, cards []IC) string {
 		case domain.StageTwoSaltDeposits:
 			sym = "S"
 			stg = 2
-		case domain.StageOneUnknown:
-			sym = "1"
-			stg = 1
-		case domain.StageTwoUnknown:
-			sym = "2"
-			stg = 2
-		case domain.StageThreeUnknown:
-			sym = "3"
-			stg = 3
 		default:
-			t.Fatalf("invalidcard: %v", actcard)
+			if 1 > actcard.Stage || actcard.Stage > 3 {
+				t.Fatalf("invalidcard: %v", actcard)
+			}
+
+			sym = strconv.Itoa(actcard.Stage)
+			stg = actcard.Stage
 		}
 
 		idc, ok := any(card).(domain.InvaderCardInDeck)

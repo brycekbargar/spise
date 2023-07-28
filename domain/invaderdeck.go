@@ -5,7 +5,13 @@ import (
 )
 
 // ErrNoInvaderCard occurs when the an action tries to draw from an empty invader deck.
-var ErrNoInvaderCard = errors.New("the invader deck is empty")
+var (
+	ErrNoInvaderCard = errors.New("the invader deck is empty")
+	// ErrInvaderCardNotReturnable occurs when Fractured Days returns an invalid card.
+	ErrInvaderCardNotReturnable = errors.New(
+		"the invader card must be within one stage to return",
+	)
+)
 
 type InvaderDeck struct {
 	game *Game
@@ -47,37 +53,48 @@ func NewInvaderDeck(game *Game) *InvaderDeck {
 	}
 }
 
-func (deck *InvaderDeck) InvaderStage() int {
-	if len(deck.InDeck) == 0 {
-		return 3
-	}
-
-	return deck.InDeck[0].Stage
-}
-
 func (deck *InvaderDeck) Draw(card InvaderCard) error {
 	if len(deck.InDeck) == 0 {
 		return ErrNoInvaderCard
 	}
 
-	if card.Stage != deck.InvaderStage() {
+	if card.Stage != deck.InDeck[0].Stage {
 		return ErrInvalidInvaderCard
 	}
 
 	deck.Drawn = append(deck.Drawn, InvaderCardDrawn{card, false})
 	deck.InDeck = deck.InDeck[1:]
-	stg := deck.InvaderStage()
-	rem := len(deck.InDeck) != 0
-	for i := range deck.Drawn {
-		c := deck.Drawn[i]
-		if c.Stage > stg {
-			deck.Drawn[i].PastReturnable = rem && (c.Stage-stg <= 1)
-		} else {
-			deck.Drawn[i].PastReturnable = rem && (stg-c.Stage <= 1)
+	deck.setReturnable()
+
+	return nil
+}
+
+func (deck *InvaderDeck) Return(card InvaderCard) error {
+	for cix, c := range deck.Drawn {
+		if c.InvaderCard == card {
+			if !c.PastReturnable {
+				return ErrInvaderCardNotReturnable
+			}
+
+			mod := make([]InvaderCardDrawn, len(deck.Drawn[:cix]))
+			copy(mod, deck.Drawn[:cix])
+			mod = append( // nozero
+				mod,
+				InvaderCardDrawn{deck.InDeck[0].InvaderCard, true},
+			)
+			mod = append( // nozero
+				mod,
+				deck.Drawn[cix+1:]...)
+			deck.Drawn = mod
+
+			deck.InDeck[0] = InvaderCardInDeck{card, false}
+			deck.setReturnable()
+
+			return nil
 		}
 	}
 
-	return nil
+	return ErrInvalidInvaderCard
 }
 
 // InvaderCardInDeck wraps possibilites for the invader deck.
@@ -90,6 +107,22 @@ type InvaderCardInDeck struct {
 type InvaderCardDrawn struct {
 	InvaderCard
 	PastReturnable bool
+}
+
+func (deck *InvaderDeck) setReturnable() {
+	rem := len(deck.InDeck) != 0
+	stg := -99
+	if rem {
+		stg = deck.InDeck[0].Stage
+	}
+	for i := range deck.Drawn {
+		c := deck.Drawn[i]
+		if c.Stage > stg {
+			deck.Drawn[i].PastReturnable = rem && (c.Stage-stg <= 1)
+		} else {
+			deck.Drawn[i].PastReturnable = rem && (stg-c.Stage <= 1)
+		}
+	}
 }
 
 // TODO: what a mess.
