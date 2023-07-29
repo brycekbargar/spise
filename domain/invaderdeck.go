@@ -101,6 +101,40 @@ func (deck *InvaderDeck) Return(card InvaderCard) error {
 	return ErrInvalidInvaderCard
 }
 
+func (deck *InvaderDeck) IgnoreRisingInterest() {
+	if len(deck.InDeck) == 0 ||
+		deck.InDeck[0].SpeciallyPlaced {
+		return
+	}
+
+	deck.InDeck = deck.InDeck[1:]
+	deck.setReturnable()
+}
+
+func (deck *InvaderDeck) DistractHardworkingSettlers() {
+	s2ix, s3ix := -1, -1
+	for i := len(deck.InDeck) - 1; i >= 0; i-- {
+		if s2ix != -1 && deck.InDeck[i].Stage == 2 {
+			s2ix = i
+		}
+		if s3ix != -1 && deck.InDeck[i].Stage == 3 {
+			s3ix = i
+		}
+	}
+
+	if s2ix != -1 && s3ix != -1 && s2ix > s3ix {
+		// This is kind of a hack.
+		s2ix, s3ix = s3ix, s2ix
+	}
+
+	if s3ix != -1 {
+		deck.InDeck = append(deck.InDeck[:s3ix], deck.InDeck[s3ix+1:]...)
+	}
+	if s2ix != -1 {
+		deck.InDeck = append(deck.InDeck[:s2ix], deck.InDeck[s2ix+1:]...)
+	}
+}
+
 func (deck *InvaderDeck) Entrenched(card InvaderCard) error {
 	if (deck.game.LeadingAdversary != Russia || deck.game.LeadingAdversaryLevel < 5) &&
 		(deck.game.SupportingAdversary != Russia || deck.game.SupportingAdversaryLevel < 5) {
