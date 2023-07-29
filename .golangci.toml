@@ -6,7 +6,7 @@ max-same-issues = 0
 fix = false
 
 [linters]
-disable = ["godox"]
+disable = ["godox", "gci"]
 enable = ["nlreturn", "varnamelen"]
 presets = [
   "bugs",
