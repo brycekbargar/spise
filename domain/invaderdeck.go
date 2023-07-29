@@ -11,6 +11,10 @@ var (
 	ErrInvaderCardNotReturnable = errors.New(
 		"the invader card must be within one stage to return",
 	)
+	// ErrNotEntrenched occurs when Russia's game effect is active.
+	ErrNotEntrenched = errors.New(
+		"only Russia 5+ is entrenched in the face of fear",
+	)
 )
 
 type InvaderDeck struct {
@@ -95,6 +99,22 @@ func (deck *InvaderDeck) Return(card InvaderCard) error {
 	}
 
 	return ErrInvalidInvaderCard
+}
+
+func (deck *InvaderDeck) Entrenched(card InvaderCard) error {
+	if (deck.game.LeadingAdversary != Russia || deck.game.LeadingAdversaryLevel < 5) &&
+		(deck.game.SupportingAdversary != Russia || deck.game.SupportingAdversaryLevel < 5) {
+		return ErrNotEntrenched
+	}
+
+	if card.Stage != 2 && card.Stage != 3 {
+		return ErrInvalidInvaderCard
+	}
+
+	deck.Drawn = append(deck.Drawn, InvaderCardDrawn{card, false})
+	deck.setReturnable()
+
+	return nil
 }
 
 // InvaderCardInDeck wraps possibilites for the invader deck.

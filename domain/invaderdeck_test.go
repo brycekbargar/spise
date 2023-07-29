@@ -166,6 +166,104 @@ func TestDraw(t *testing.T) {
 }
 
 //nolint:exhaustruct
+func TestEntrenched(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Entrenchable", func(t *testing.T) {
+		t.Parallel()
+
+		cases := []struct {
+			name string
+			game *domain.Game
+			card domain.InvaderCard
+			err  error
+		}{
+			{
+				"None",
+				&domain.Game{},
+				domain.StageTwoMountain,
+				domain.ErrNotEntrenched,
+			},
+			{
+				"OneNonRussia",
+				&domain.Game{
+					LeadingAdversary:      domain.Scotland,
+					LeadingAdversaryLevel: 5,
+				},
+				domain.StageTwoMountain,
+				domain.ErrNotEntrenched,
+			},
+			{
+				"TwoNonRussia",
+				&domain.Game{
+					LeadingAdversary:         domain.Scotland,
+					LeadingAdversaryLevel:    6,
+					SupportingAdversary:      domain.England,
+					SupportingAdversaryLevel: 6,
+				},
+				domain.StageTwoMountain,
+				domain.ErrNotEntrenched,
+			},
+			{
+				"LowRussiaLead",
+				&domain.Game{LeadingAdversary: domain.Russia},
+				domain.StageTwoMountain,
+				domain.ErrNotEntrenched,
+			},
+			{
+				"LowRussiaSupport",
+				&domain.Game{
+					LeadingAdversary:      domain.Scotland,
+					LeadingAdversaryLevel: 5,
+					SupportingAdversary:   domain.Russia,
+				},
+				domain.StageTwoMountain,
+				domain.ErrNotEntrenched,
+			},
+			{
+				"LeadingRussia",
+				&domain.Game{
+					LeadingAdversary:      domain.Russia,
+					LeadingAdversaryLevel: 5,
+				},
+				domain.StageTwoMountain,
+				nil,
+			},
+			{
+				"SupportingRussia",
+				&domain.Game{
+					LeadingAdversary:         domain.Scotland,
+					SupportingAdversary:      domain.Russia,
+					SupportingAdversaryLevel: 5,
+				},
+				domain.StageTwoMountain,
+				nil,
+			},
+			{
+				"StageTooLow",
+				&domain.Game{
+					LeadingAdversary:      domain.Russia,
+					LeadingAdversaryLevel: 5,
+				},
+				domain.StageOneMountain,
+				domain.ErrInvalidInvaderCard,
+			},
+		}
+
+		for _, tc := range cases {
+			tc := tc
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+
+				deck := domain.NewInvaderDeck(tc.game)
+				err := deck.Entrenched(tc.card)
+				assert.ErrorIs(t, err, tc.err)
+			})
+		}
+	})
+}
+
+//nolint:exhaustruct
 func TestReturn(t *testing.T) {
 	t.Parallel()
 
