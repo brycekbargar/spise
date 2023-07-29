@@ -10,7 +10,7 @@ import (
 )
 
 //nolint:exhaustruct
-func TestDraw(t *testing.T) {
+func TestInvaderDeck_Draw(t *testing.T) {
 	t.Parallel()
 
 	t.Run("EmptyDeck", func(t *testing.T) {
@@ -166,7 +166,7 @@ func TestDraw(t *testing.T) {
 }
 
 //nolint:exhaustruct
-func TestEntrenched(t *testing.T) {
+func TestInvaderDeck_Entrenched(t *testing.T) {
 	t.Parallel()
 
 	t.Run("Entrenchable", func(t *testing.T) {
@@ -264,7 +264,7 @@ func TestEntrenched(t *testing.T) {
 }
 
 //nolint:exhaustruct
-func TestReturn(t *testing.T) {
+func TestInvaderDeck_Return(t *testing.T) {
 	t.Parallel()
 
 	t.Run("NotReturnable", func(t *testing.T) {
